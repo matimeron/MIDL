@@ -1,0 +1,1 @@
+psyms,0a=rascii('fx2-1.58-50-t700f.asc')x=reform(a[0,*])y=reform(a[1,*])z=reform(a[2,*])ps_start_eps,'test',size=[6,8]chsize=1.5ssize=1.5!p.font=1DEVICE, SET_FONT='Times', /TT_FONTplot,x,y,xrange=[0.01,600],yrange=[1e-4,1],psym=8,/xlog,/ylog,xstyle=1,ystyle=1,$	charsize=chsize,xcharsize=chsize,ycharsize=chsize,symsize=ssizeoplot,x,y,color=100,thick=2ps_end

@@ -1,0 +1,26 @@
+Begin_source
+	wavelength	    0.4132806
+	x_source	     960.6782     41.72915
+	y_source	     30.74402     14.62463
+	sigma		       0
+	name		15IDC
+	sorname		standard
+End_source
+
+Begin_beam
+    FE_apex     sslx      25.000     2000.000   0   1
+    FE_apey     ssly      25.000     1000.000   0   1
+    mirf_ape    ssly      32.000     2000.000   0   1
+    mirf_slp    dify      32.000     5.829216   0   1
+    mirf        focy      32.000     999999.0   0   1
+    mirs_ape    ssly      34.000     1200.000   0   1
+    mirv_slp    dify      34.000     5.829216   0   1
+    mirs        focy      34.000     999.0000   0   0
+    JJB         ssly      48.000     2000.000   0   0
+    croc_ape    ssly      50.000     400.0000   0   1
+    croc_slp    dify      50.000     11658.43   0   1
+    croc        focy      50.000     6.040000   0   1
+    sam_slx     sslx      56.999     10.00000   0   1
+    sam_sly     ssly      56.999     10.00000   0   0
+    sample      nul       57.000    0.0000000   0   1
+End_beam

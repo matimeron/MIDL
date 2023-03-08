@@ -1,0 +1,1676 @@
+ Librarian A09-19                                                                
+ Directory of TEXT library CARS3$DKA200:[MERON.MIDL.XOPER]XOPER_LIB.TLB;1 on  3-N
+ Creation date:  30-JUN-1992 17:31:06      Creator:  VAX-11 Librarian V04-00     
+ Revision date:   8-AUG-1992 13:49:48      Library format:   3.0                 
+ Number of modules:     27                 Max. key length:  39                  
+ Other entries:          0                 Preallocated index blocks:     11     
+ Recoverable deleted blocks:      3        Total index blocks used:        1     
+ Max. Number history records:      20      Library history records:       20     
+                                                                                 
+   1  ANGLE
+   2  CAR_TO_POL
+   3  COSANGLE
+   4  CYLINTERCEPT
+   5  DISTANCE
+   6  IDENT_OPER
+   7  INTERCEPT
+   8  LINE_2PO
+   9  MAKE_ELEM
+  10  MAKE_LINE
+  11  MAKE_PLANE
+  12  MAKE_POINT
+  13  MOVE_DEVICE
+  14  PLANE_3PO
+  15  PLANE_LINPO
+  16  POL_TO_CAR
+  17  PROJECT_ELEM
+  18  PROJECT_OPER
+  19  REFLECT_ELEM
+  20  REFLECT_OPER
+  21  ROTATE_ELEM
+  22  ROTATE_OPER
+  23  SHOW_ELEM
+  24  TRANSLATE_ELEM
+  25  UNIVEC
+  26  VNORM
+  27  VSCALP
+1
+                                 *** ANGLE ***                           
+
+ Function Angle, dirf, dirs, degrees = deg
+ 
+ ;+
+ ; NAME:
+ ;	ANGLE
+ ; PURPOSE:
+ ;	Finds the angle between two vectors.
+ ; CATEGORY:
+ ;	Geometry, general.
+ ; CALLING SEQUENCE:
+ ;	Result = ANGLE ( DIRF, DIRS [, /DEGREES] )
+ ; INPUTS:
+ ;    DIRF, DIRS
+ ;       Either vectors (same length) or variables of type GELEM (see
+ ;       explanation in the MAKE_ELEM routine).  In the second case only the
+ ;       direction field is used.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    DEGREES
+ ;	Switch, if set the result is given in degrees.  Default is radians.
+ ; OUTPUTS:
+ ;	Returns the value of the angle.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	Vectors must have equal length.
+ ; PROCEDURE:
+ ;	Uses the function COSANGLE from XOPER_LIB.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUN-1992 by Mati Meron.
+ ;-
+ 
+     on_error, 1
+ 
+     if n_elements(deg) eq 0 then return, acos(Cosangle(dirf,dirs)) $
+     else return, !radeg*acos(Cosangle(dirf,dirs))
+ end
+ 
+                               *** CAR_TO_POL ***                      
+
+ Function Car_to_pol, vec
+ 
+ ;+
+ ; NAME:
+ ;	CAR_TO_POL
+ ; PURPOSE:
+ ;	Converts a 3 dimensional cartesian vector to polar coordinates.
+ ; CATEGORY:
+ ;	Geometry, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = CAR_TO_POL (VEC)
+ ; INPUTS:
+ ;    VEC
+ ;	Vector, numeric, 3 dimensional.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;	None.
+ ; OUTPUTS:
+ ;	Returns the vector in an (R, Theta, Phi) form.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	Only 3 dimensional vectors accepted.
+ ; PROCEDURE:
+ ;	Straightforward.  Uses VNORM from XOPER_LIB and TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     on_error, 1
+     if n_elements(vec) ne 3 then message, 'Not a 3-D vector!'
+ 
+     pvec = make_array(3, type = Type(vec) > 4)
+     pvec(0) = Vnorm(vec)
+     if pvec(0) ne 0 then begin
+ 	pvec(1) = acos(vec(2)/pvec(0))
+ 	if vec(0) ne 0 or vec(1) ne 0 then pvec(2) = atan(vec(1),vec(0))
+     endif
+ 
+     return, pvec
+ end
+ 
+                                *** COSANGLE ***                        
+
+ Function Cosangle, dirf, dirs
+ 
+ ;+
+ ; NAME:
+ ;	COSANGLE
+ ; PURPOSE:
+ ;	Finds the Cosine of the angle between two vectors.
+ ; CATEGORY:
+ ;	Geometry, General.
+ ; CALLING SEQUENCE:
+ ;	Result = COSANGLE ( DIRF, DIRS)
+ ; INPUTS:
+ ;    DIRF, DIRS
+ ;	Either vectors (same length) or variables of type GELEM (see
+ ;	explanation in the MAKE_ELEM routine).  In the second case only the
+ ;	direction fields are used.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;	None.
+ ; OUTPUTS:
+ ;	Returns the Cosine of the angle between the two directions.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Uses the functions VSCALP and VNORM from XOPER_LIB and TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     on_error, 1
+ 
+     if Type(dirf) eq 8 then tdf = dirf.dir else tdf = dirf
+     if Type(dirs) eq 8 then tds = dirs.dir else tds = dirs
+ 
+     if n_elements(tdf) ne n_elements(tds) then message, 'Unequal dimensions!'
+ 
+     return, - 1 > Vscalp(tdf,tds)/(Vnorm(tdf)*Vnorm(tds)) < 1
+ end
+ 
+                              *** CYLINTERCEPT ***                    
+
+ Function Cylintercept, lin, cyl, rad, lonvec = lv, travec = tv, backward = bc,$
+     name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	CYLINTERCEPT
+ ; PURPOSE:
+ ;	Finds the intercept of the line LIN with the cylinder CYL.  LIN is
+ ;	represented by a GELEM line structure (see routine MAKE_ELEM).  CYL is
+ ;	represented by a similar structure plus the radius RAD.
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = CYLINTERCEPT ( LIN, CYL, RAD, [ keywords])
+ ; INPUTS:
+ ;    LIN
+ ;	A GELEM structure representing a line.
+ ;    CYL
+ ;	Ditto.
+ ;    RAD
+ ;	Scalar, the cylinder radius.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    LONVEC
+ ;	Optional output parameter, see below.
+ ;    TRAVEC
+ ;	Ditto.
+ ;    BACKWARD
+ ;	Switch.  If set, the backwards going intercept is selected.  Default is
+ ;	the forward intercept, i.e. the one corresponding to the positive sign
+ ;	of the square root.
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the result.
+ ;	Default is "Point".
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the result.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing the point where the line
+ ;	intercepts the cylinder.  If no intercept exists, returns an element of
+ ;	type "Undefined".
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;    LONVEC
+ ;	The name of a variable to receive the longitudinal (along the cylinder
+ ;	axis) part of the vector connecting the intercept with the cylinder
+ ;	axis)
+ ;    TRAVEC
+ ;	Same for the transverse part.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Straightforward geometry.  Calls MAKE_ELEM and PROJECT_OPERfrom
+ ;	XOPER_LIB and TYPE from MIDL>
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JULY-1992 by Mati Meron.
+ ;-
+ 
+     on_error, 1
+     if Type(lin) ne 8 or Type(cyl) ne 8 then message, 'Improper elements!'
+     if lin.dim ne 1 or cyl.dim ne 1 then message, 'Elements must be lines!'
+ 
+     rdim = 0
+     rloc = [0.,0.,0.]
+     delr = cyl.loc - lin.loc
+     prop = Project_oper(cyl.dir, /comp)
+ 
+     a = (transpose(lin.dir)#prop#lin.dir)(0)
+     b = (transpose(lin.dir)#prop#delr)(0)
+     c = (transpose(delr)#prop#delr)(0) - rad^2
+ 
+     disc = b^2 - a*c
+     if disc ge 0 and a gt 0 then begin
+ 	sn = 1 - 2*keyword_set(bc)
+ 	mag = (b + sn*sqrt(disc))/a
+ 	rloc = lin.loc + mag*lin.dir
+ 	vrel = rloc - cyl.loc
+ 	tv = prop#vrel
+ 	lv = vrel - tv
+     endif else rdim = -1
+ 
+     return, Make_elem(rdim, rloc, [0.,0.,0.], name = nam, idnum = id)
+ end
+ 
+                                *** DISTANCE ***                        
+
+ Function Distance, elef, eles
+ 
+ ;+
+ ; NAME:
+ ;	DISTANCE
+ ; PURPOSE:
+ ;	Finds the distance between two geometrical elements of type GELEM (for
+ ;	definition see routine MAKE_ELEM).
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = DISTANCE (ELEF, ELES)
+ ; INPUTS:
+ ;    ELEF
+ ;	A GELEM structure
+ ;    ELES
+ ;	Ditto.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;	None.
+ ; OUTPUTS:
+ ;	Returns the distance between ELEF and ELES, if defined.  If one of the
+ ;	elements if undefined (.dim = -1) returns -1e38.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	Both ELEF and ELES must be GELEM type structures.
+ ; PROCEDURE:
+ ;	Standard geometrical definitions.  Uses VNORM, VSCALP and PROJECT_OPER
+ ;	FROM XOPER_LIB.  ALSO uses TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     on_error, 1
+     if Type(elef) ne 8 or Type(eles) ne 8 then message, 'Improper elements!'
+ 
+     if elef.dim le eles.dim then begin
+ 	delf = elef
+ 	dels = eles
+     endif else begin
+ 	delf = eles
+ 	dels = elef
+     endelse
+ 
+     dr = delf.loc - dels.loc
+     case delf.dim of
+ 	-1: dist = -1e38
+ 	0:  case dels.dim of
+ 		0:  dist = Vnorm(dr)
+ 		1:  dist = Vnorm(Project_oper(dels.dir,/comp)#dr)
+ 		2:  dist = Vnorm(Project_oper(dels.dir)#dr)
+ 		else:  message, 'Unrecognized element!'
+ 	    endcase
+ 	1:  case dels.dim of
+ 		1:  begin
+ 			nvec = crossp(delf.dir,dels.dir)
+ 			if Vnorm(nvec) eq 0 then $
+ 			dist = Vnorm(Project_oper(dels.dir,/comp)#dr) $
+ 			else dist = Vnorm(Project_oper(nvec)#dr)
+ 		    end
+ 		2:  if Vscalp(delf.dir,dels.dir) ne 0 then dist = 0. $
+ 		    else dist = Vnorm(Project_oper(dels.dir)#dr)
+ 		else:  message, 'Unrecognized element!'
+ 	    endcase
+ 	2:  case dels.dim of
+ 		2:  if Vnorm(crossp(delf.dir,dels.dir)) ne 0 then dist = 0. $
+ 		    else dist = Vnorm(Project_oper(dels.dir)#dr)
+ 		else:  message, 'Unrecognized element!'
+ 	    endcase
+ 	else:  message, 'Unrecognized element!'
+     endcase
+ 
+     return, dist
+ end
+ 
+                               *** IDENT_OPER ***                      
+
+ Function Ident_oper, n, type = typ
+ 
+ ;+
+ ; NAME:
+ ;	IDENT_OPER
+ ; PURPOSE:
+ ;	Creates an identity matrix.
+ ; CATEGORY:
+ ;	Geometry, General.
+ ; CALLING SEQUENCE:
+ ;	Result = IDENT_OPER ( N [, TYPE = TYP)
+ ; INPUTS:
+ ;    N
+ ;	Integer scalar, the dimension of the matrix.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    TYPE
+ ;	Integer in the [1,6] range.  Specifies numeric type of the result.
+ ;	Default is 4 (FLOATING).
+ ; OUTPUTS:
+ ;	Returns an N*N identity matrix.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Straightforward.  Uses DEFAULT from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     res = make_array(n, n, type = Default(typ,4))
+     res((n+1)*indgen(n)) = 1
+ 
+     return, res
+ end
+ 
+                               *** INTERCEPT ***                       
+
+ Function Intercept, elef, eles, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	INTERCEPT
+ ; PURPOSE:
+ ;	Finds the intercept of the geometrical elements ELEF, ELES (both given
+ ;	as GELEM structures, see routine MAKE_ELEM).
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = INTERCEPT ( ELEF, ELES, [, keywords])
+ ; INPUTS:
+ ;    ELEF
+ ;	A GELEM structure
+ ;    ELES
+ ;	Ditto.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the result.
+ ;	Default is the standard name ("Point", "Line" or "Plane")
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the result.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing the intersect of ELEF and ELES.
+ ;	If no intersect exists, returns an element of type "Undefined".
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Standard geometrical definitions.  Uses VNORM, VSCALP and MAKE_ELEM
+ ;	from XOPER_LIB.  Also uses TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+     if Type(elef) ne 8 or Type(eles) ne 8 then message, 'Improper elements!'
+ 
+     if elef.dim le eles.dim then begin
+ 	delf = elef
+ 	dels = eles
+     endif else begin
+ 	delf = eles
+ 	dels = elef
+     endelse
+ 
+     rav = (dels.loc + delf.loc)/2
+     der = (dels.loc - delf.loc)/2
+     rloc = [0.,0.,0.]
+     rdir = rloc
+ 
+     case delf.dim of
+ 	-1: rdim = -1
+ 	0:  case dels.dim of
+ 		0:  if Vnorm(der) eq 0 then begin
+ 			rdim = 0
+ 			rloc = delf.loc
+ 		    endif else rdim = -1
+ 		1:  if Vnorm(crossp(der,dels.dir)) eq 0 then begin
+ 			rdim = 0
+ 			rloc = delf.loc
+ 		    endif else rdim = -1
+ 		2:  if Vscalp(der,dels.dir) eq 0 then begin
+ 			rdim = 0
+ 			rloc = delf.loc
+ 		    endif else rdim = -1
+ 		else: begin
+ 			message, 'Unrecognized element!', /continue
+ 			rdim = -1
+ 		    end
+ 	    endcase
+ 	1:  case dels.dim of
+ 		1:  begin
+ 			nvec = crossp(delf.dir,dels.dir)
+ 			if Vnorm(nvec) eq 0 then begin
+ 			    if Vnorm(crossp(der,dels.dir)) eq 0 then begin
+ 				rdim = 1
+ 				rloc = delf.loc
+ 				rdir = delf.dir
+ 			    endif else rdim = -1
+ 			endif else begin
+ 			    if Vscalp(der,nvec) eq 0 then begin
+ 				rdim = 0
+ 				scaf = 1./(1 - Vscalp(delf.dir,dels.dir)^2)
+ 				a = scaf*Vscalp(der,crossp(dels.dir,nvec))
+ 				b = scaf*Vscalp(der,crossp(delf.dir,nvec))
+ 				rloc = rav + a*delf.dir + b*dels.dir
+ 			    endif else rdim = -1
+ 			endelse
+ 		    end
+ 		2:  begin
+ 			if Vscalp(delf.dir,dels.dir) eq 0 then begin
+ 			    if Vscalp(der,dels.dir) eq 0 then begin
+ 				rdim = 1
+ 				rloc = delf.loc
+ 				rdir = delf.dir
+ 			    endif else rdim = -1
+ 			endif else begin
+ 			    rdim = 0
+ 			    a = Vscalp(der,dels.dir)/Vscalp(delf.dir,dels.dir)
+ 			    rloc = delf.loc + 2*a*delf.dir
+ 			endelse
+ 		    end
+ 		else: begin
+ 			message, 'Unrecognized element!', /continue
+ 			rdim = -1
+ 		    end
+ 	    endcase
+ 	2:  case dels.dim of
+ 		2:  begin
+ 			nvec = crossp(delf.dir,dels.dir)
+ 			if Vnorm(nvec) eq 0 then begin
+ 			    if Vscalp(der,delf.dir) eq 0 then begin
+ 				rdim = 2
+ 				rloc = delf.loc
+ 				rdir = delf.dir
+ 			    endif else rdim = -1
+ 			endif else begin
+ 			    rdim = 1
+ 			    a = Vscalp(delf.loc,delf.dir)
+ 			    b = Vscalp(dels.loc,dels.dir)
+ 			    c = Vscalp(delf.dir,dels.dir)
+ 			    va = delf.dir - c*dels.dir
+ 			    vb = dels.dir - c*delf.dir
+ 			    rloc = (a*va + b*vb)/(1 - c^2)
+ 			    rdir = crossp(delf.dir,dels.dir)
+ 			endelse
+ 		    end
+ 		else: begin
+ 			message, 'Unrecognized element!', /continue
+ 			rdim = -1
+ 		    end
+ 	    endcase
+ 	else: begin
+ 		message, 'Unrecognized element!', /continue
+ 		rdim = -1
+ 	    end
+     endcase
+ 
+     return, Make_elem(rdim, rloc, rdir, name = nam, idnum = id)
+ end
+ 
+                                *** LINE_2PO ***                        
+
+ Function Line_2po, pf, ps, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	LINE_2PO
+ ; PURPOSE:
+ ;	Generates a GELEM structure representing a line passing through two
+ ;	given points.  For description of a GELEM structure, see MAKE_ELEM.
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = LINE_2PO ( PF, PS [, keywords])
+ ; INPUTS:
+ ;    PF
+ ;	Either a 3 dimensional vector, or GELEM structure representing a point.
+ ;    PS
+ ;	Ditto.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the line.
+ ;	Default name is "Line".
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the line.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing a line passing through the
+ ;	points PF, PS.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	If PF and PS represent the same point, an "Undefined" GELEM is returned
+ ;	instead of a line.
+ ; PROCEDURE:
+ ;	Uses the two points to establish direction and calls MAKE_LINE
+ ;	(in XOPER_LIB).  Also uses TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+     if Type(pf) ne 8 then tpf = pf else $
+     if pf.dim eq 0 then tpf = pf.loc else message, 'Not a point!'
+     if Type(ps) ne 8 then tps = ps else $
+     if ps.dim eq 0 then tps = ps.loc else message, 'Not a point!'
+ 
+     return, Make_line(tpf, tps - tpf, name = nam, idnum = id)
+ end
+ 
+                               *** MAKE_ELEM ***                       
+
+ Function Make_elem, dimel, locvec, dirvec, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	MAKE_ELEM
+ ; PURPOSE:
+ ;	Creates or modifies a geometric element (GEMEL).  GEMEL is defined as a
+ ;	structure with the following fields:
+ ;	    NAM: string, element's name.
+ ;	    IDN: long integer, element's ID.
+ ;	    DIM: integer, specifies type.  Currently used values are:
+ ;		-1 - undefined.
+ ;		 0 - point.
+ ;		 1 - line.
+ ;		 2 - plane.
+ ;	    LOC: 3 dimensional floating vector.  Specifies location.
+ ;	    DIR: 3 dimensional floating vector.  Specifies direction.
+ ;	The direction field is left blank for a point.  Both location and
+ ;	direction are blank for "undefined".
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = MAKE_ELEM ( DIMEL [, LOCVEC, DIRVEC ] [, keywords])
+ ; INPUTS:
+ ;    DIMEL
+ ;	Either a proper geometric element (structure of type GELEM) or an
+ ;	integer (corresponding to the DIM field).  If the second is true then
+ ;	the parameters LOCVEC and DIRVEC must be provided.
+ ;    LOCVEC
+ ;	3 dimensional vector, gets translated into the LOC field of the
+ ;	geometric element.
+ ;    DIRVEC
+ ;	3 dimensional vector, gets translated into the DIR field of the
+ ;	geometric element.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the
+ ;	geometric element.  If absent, generic names ("Point", "Line" or
+ ;	"Plane") are used.
+ ;    IDNUM
+ ;	Accepts a numeric constant or variable that's used as the IDN field of
+ ;	the geometric element.  Default value is one.  Converted to type LONG
+ ;	on input.
+ ; OUTPUTS:
+ ;	Returns a structure of type GELEM.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Writes the input parameters into the fields of the output structure.
+ ;	Also, for lines and planes, normalizes DIR and replaces LOC with its
+ ;	minimal equivalent (perpendicular to DIR for lines, parallel to DIR
+ ;	for planes.  Uses TYPE from MIDL and VNORM, PROJECT_OPER, from
+ ;	XOPER_LIB.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM and IDN
+ ;	field in structure GELEM.
+ ;-
+ 
+     on_error, 1
+ 
+     genam = ['** Undefined! **', 'Point', 'Line', 'Plane']
+     blank = {gelem, nam:genam(0), idn:1l, dim:-1, loc:fltarr(3), dir:fltarr(3)}
+ 
+     if n_params() eq 1 then if Type(dimel) eq 8 then elem = dimel $
+     else message, 'Input error, missing parameters!' $
+     else  elem = {gelem, genam(dimel+1), 1, dimel, locvec, dirvec}
+     if Type(nam) eq 7 then elem.nam = nam
+     if n_elements(id) ne 0 then if Type(id) lt 7 then elem.idn = id
+ 
+     if elem.dim gt 0 then begin
+ 	norm = Vnorm(elem.dir)
+ 	if norm eq 0 then begin
+ 	    elem.dim = -1
+ 	    message, 'Warning, direction not defined!', /continue
+ 	endif else elem.dir = elem.dir/norm
+     endif
+ 
+     case elem.dim of
+ 	-1  :	elem = blank
+ 	0   :	elem.dir = 0.
+ 	1   :	elem.loc = Project_oper(elem.dir,/comp)#elem.loc
+ 	2   :	elem.loc = Project_oper(elem.dir)#elem.loc
+ 	else:	begin
+ 		    elem = blank
+ 		    message, 'Unrecognized element index', /continue
+ 		end
+     endcase
+ 
+     return, elem
+ end
+ 
+                               *** MAKE_LINE ***                       
+
+ Function Make_line, lv, dv, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	MAKE_LINE
+ ; PURPOSE:
+ ;	Generates a GELEM structure representing a line.  For description of
+ ;	a GELEM structure, see routine MAKE_ELEM.
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = MAKE_LINE ( LV, DV [, keywords])
+ ; INPUTS:
+ ;    LV
+ ;	3 dimensional vector, yields the LOC field of the line.
+ ;    DV
+ ;	3 dimensional vector, yields the DIR field of the line.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the line.
+ ;	Default name is "Line".
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the line.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing a line passing through LV, in
+ ;	the direction of DV.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	If DV is a zero vector, an "Undefined" GELEM is returned instead of a
+ ;	line.
+ ; PROCEDURE:
+ ;	Call to MAKE_ELEM (in XOPER_LIB).
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+     if n_elements(lv) ne 3 or n_elements(dv) ne 3 then message, 'Not vectors!'
+ 
+     return, Make_elem(1, lv, dv, name = nam, idnum = id)
+ end
+ 
+                               *** MAKE_PLANE ***                      
+
+ Function Make_plane, lv, dv, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	MAKE_PLANE
+ ; PURPOSE:
+ ;	Generates a GELEM structure representing a plane.  For description of
+ ;	a GELEM structure, see routine MAKE_ELEM.
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = MAKE_PLANE ( LV, DV [, keywords])
+ ; INPUTS:
+ ;    LV
+ ;	3 dimensional vector, yields the LOC field of the plane.
+ ;    DV
+ ;	3 dimensional vector, yields the DIR field of the plane.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the plane.
+ ;	Default name is "Plane".
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the plane.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing a plane passing through LV, and
+ ;	orthogonal to DV.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	If DV is a zero vector, an "Undefined" GELEM is returned instead of a
+ ;	plane.
+ ; PROCEDURE:
+ ;	Call to MAKE_ELEM (in XOPER_LIB).
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+     if n_elements(lv) ne 3 or n_elements(dv) ne 3 then message, 'Not vectors!'
+ 
+     return, Make_elem(2, lv, dv, name = nam, idnum = id)
+ end
+ 
+                               *** MAKE_POINT ***                      
+
+ Function Make_point, lv, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	MAKE_POINT
+ ; PURPOSE:
+ ;	Generates a GELEM structure representing a point.  For description of
+ ;	a GELEM structure, see routine MAKE_ELEM.
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = MAKE_POINT ( LV [, keywords])
+ ; INPUTS:
+ ;    LV
+ ;	3 dimensional vector, yields the LOC field of the point.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the point.
+ ;	Default name is "Point".
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the point.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing the point LV.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Call to MAKE_ELEM (in XOPER_LIB).
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+     if n_elements(lv) ne 3 then message, 'Not a vector!'
+ 
+     return, Make_elem(0, lv, fltarr(3), name = nam, idnum = id)
+ end
+ 
+                              *** MOVE_DEVICE ***                     
+
+ Pro Move_device, dev, delts, degrees = deg, external = ext
+ 
+ ;+
+ ; NAME:
+ ;	MOVE_DEVICE.
+ ; PURPOSE:
+ ;	Performs a set of transformations on a "device", where "device' is
+ ;	defined as an array of geometrical elements (i.e. structures of type
+ ;	GELEM, see routine MAKE_ELEM).  The transformations can be either
+ ;	rotations or translations.  More details appear in PROCEDURE, below.
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = MOVE_DEVICE, DEV, DELTS [, /DEGREES ] [, EXTERNAL = ext ])
+ ; INPUTS:
+ ;    DEV
+ ;	An array of GELEM structures.
+ ;    DELTS
+ ;	Either a numeric array or ( if EXTERNAL is set) a numeric scalar)
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    DEGREES
+ ;	If set, all angles are measured in degrees.  Default is radians.
+ ;    EXTERNAL
+ ;	Structure of type GELEM, representing a line or a plane.  Optional.
+ ; OUTPUTS:
+ ;	None.  However DEV is modified by the call.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	There are two possible modes of operation:
+ ;	1)  If the keyword EXTERNAL is used, all the elements of DEV are
+ ;	    transformed relative to EXT.  If EXT is a line, the transformation
+ ;	    is rotation around EXT, where DELTS provides the rotation angle.
+ ;	    If EXT is a plane, the transformations is a translation along the
+ ;	    normal to the plane, by the distance DELTS.
+ ;	2)  If EXTERNAL isn't provided, each element of DEV, in order, serves as
+ ;	    a reference for transforming the elements that follow it.  If
+ ;	    DEV(i) is a line, all DEV(j) (j = i+1 ...) whose ID numbers is
+ ;	    divisible by the ID number of DEV(i) are rotated around this line
+ ;	    by an angle DELTS(i).  If DEV(i) is a plane, all DEV(j) (j = i... )
+ ;	    whose ID numbers are divisible by the ID number of DEV(i) are
+ ;	    translated along the normal to this plane, by a distance DELTS(i).
+ ;
+ ;	MOVE_DEVICE uses calls to ROTATE_ELEM and TRANSLATE_ELEM in XOPER_LIB,
+ ;	and also TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added ID number checking.
+ ;-
+ 
+     on_error, 1
+     if Type(dev) ne 8 then message, 'Not a device!'
+ 
+     nel= n_elements(dev) - 1
+     if n_elements(ext) ne 0 then begin
+ 	if Type(ext) ne 8 then message, 'Not a proper element!'
+ 	if delts ne 0 then begin
+ 	    if ext.dim eq 1 then for j = 0, nel do $
+ 	    dev(j) = Rotate_elem(dev(j), ext, delts, degrees = deg) $
+ 	    else if ext.dim eq 2 then for j = 0, nel do $
+ 	    dev(j) = Translate_elem(dev(j), ext, delts)
+ 	endif
+     endif else begin
+ 	k = where(delts(0:nel < (n_elements(delts) - 1)) ne 0, numk)
+ 	for i = 0, numk - 1 do begin
+ 	    l = k(i) + where(dev(k(i):*).idn mod dev(k(i)).idn eq 0, numl)
+ 	    for j = 0, numl - 1 do begin
+ 		if dev(k(i)).dim eq 1 and k(i) ne l(j) then dev(l(j)) = $
+ 	    	Rotate_elem(dev(l(j)), dev(k(i)), delts(k(i)), degrees = deg) $
+ 		else if dev(k(i)).dim eq 2 then dev(l(j)) = $
+ 		Translate_elem(dev(l(j)), dev(k(i)), delts(k(i)))
+ 	    endfor
+ 	endfor
+     endelse
+ 
+     return
+ end
+ 
+                               *** PLANE_3PO ***                       
+
+ Function Plane_3po, pf, ps, pt, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	PLANE_3PO
+ ; PURPOSE:
+ ;	Generates a GELEM structure representing a plane passing through 3
+ ;	given points.  For description of a GELEM structure, see MAKE_ELEM.
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = PLANE_3PO ( PF, PS, PT [, keywords])
+ ; INPUTS:
+ ;    PF
+ ;	Either a 3 dimensional vector, or GELEM structure representing a point.
+ ;    PS
+ ;	Ditto.
+ ;    PT
+ ;	Ditto.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the line.
+ ;	Default name is "Plane".
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the line.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing the plane passing through PF,
+ ;	PS, PT.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	If the three points are coplanar, an "Undefined" GELEM is returned
+ ;	instead of a plane.
+ ; PROCEDURE:
+ ;	Uses the three points to establish the direction orthogonal to the
+ ;	plane, then calls MAKE_PLANE in XOPER_LIB.  Also uses TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+ 
+     if Type(pf) ne 8 then tpf = pf else $
+     if pf.dim eq 0 then tpf = pf.loc else message, 'Not a point!'
+     if Type(ps) ne 8 then tps = ps else $
+     if ps.dim eq 0 then tps = ps.loc else message, 'Not a point!'
+     if Type(pt) ne 8 then tpt = pt else $
+     if pt.dim eq 0 then tpt = pt.loc else message, 'Not a point!'
+ 
+     return, Make_plane(tpf, crossp(tps-tpf, tpt-tpf), name = nam, idnum = id)
+ end
+ 
+                              *** PLANE_LINPO ***                     
+
+ Function Plane_linpo, lin, pt, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	PLANE_LINPO
+ ; PURPOSE:
+ ;	Generates a GELEM structure representing the plane that's passing
+ ;	through the line LIN and the point PT.  For a description of a GELEM
+ ;	structure, see routine MAKE_ELEM.
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = PLANE_LINPO ( LIN, PT [, keywords] )
+ ; INPUTS:
+ ;    LIN
+ ;	A GELEM structure representing a line.
+ ;    PT
+ ;	Either a 3 dimensional vector or a GELEM structure representing a point
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the plane.
+ ;	Default name is "Plane".
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the plane.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing a plane passing through both LIN
+ ;	and PT.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	If PT is a point on LIN, an "Undefined" GELEM is returned instead of a
+ ;	line.
+ ; PROCEDURE:
+ ;	Calls MAKE_PLANE (in XOPER_LIB).  Also uses TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+     if not (Type(lin) eq 8 and lin.dim eq 1) then message, 'Not a line!'
+     if Type(pt) lt 8 then tpt = pt else $
+     if pt.dim eq 0 then tpt = pt.loc else message, 'Not a point!'
+ 
+     return, Make_plane(tpt, crossp(lin.loc-tpt, lin.dir), name= nam, idnum= id)
+ end
+ 
+                               *** POL_TO_CAR ***                      
+
+ Function Pol_to_car, vec
+ 
+ ;+
+ ; NAME:
+ ;	POL_TO_CAR
+ ; PURPOSE:
+ ;	Converts a 3 dimensional vector from polar to cartesian coordinates.
+ ; CATEGORY:
+ ;	Geometry, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = POL_TO_CAR (VEC)
+ ; INPUTS:
+ ;    VEC
+ ;	3 dimensional numeric vector.  Assumed to be in the (R,Theta,Phi) form.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;	None.
+ ; OUTPUTS:
+ ;	Returns the input vector converted to cartesian coordinates.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	Only 3 dimensional vectors accepted.
+ ; PROCEDURE:
+ ;	Straightforward.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     on_error, 1
+     if n_elements(vec) ne 3 then message, 'Not a 3-D vector!'
+ 
+     return, vec(0)*[sin(vec(1))*[cos(vec(2)),sin(vec(2))],cos(vec(1))]
+ end
+ 
+                              *** PROJECT_ELEM ***                    
+
+ Function Project_elem, elem, refelem, complementary = cmp, name= nam, idnum= id
+ 
+ ;+
+ ; NAME:
+ ;	PROJECT_ELEM.
+ ; PURPOSE:
+ ;	Projects a geometrical element ELEM into the subspace perpendicular
+ ;	to (or parallel to) the plane REFELEM.  Both ELEM and REFELEM are GELEM
+ ;	structures (see routine MAKE_ELEM).
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = PROJECT_ELEM(ELEM, REFELEM [, keywords])
+ ; INPUTS:
+ ;    ELEM
+ ;	A GELEM structure
+ ;    REFELEM
+ ;	A GELEM structure representing a plane.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    COMPLEMENTARY
+ ;	If set, the projection is on the plane, otherwise it is normal to the
+ ;	plane.
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the result.
+ ;	Default is the name-type of ELEM.
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the result.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing the result of applying the
+ ;	projection to ELEM.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	REFELEM must be a plane (i.e. refelem.dim = 2).
+ ; PROCEDURE:
+ ;	Calls PROJECT_OPER and MAKE_ELEM (in XOPER_LIB).  Also calls TYPE from
+ ;	MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+     if Type(elem) ne 8 or Type(refelem) ne 8 then message, 'Improper elements!'
+     if refelem.dim ne 2 then message, 'Reference must be a plane!'
+ 
+     dumel = elem
+     oper = Project_oper(refelem.dir, complementary = cmp)
+     dumel.loc = oper#(dumel.loc - refelem.loc) + refelem.loc
+     dumel.dir = oper#dumel.dir
+ 
+     return, Make_elem(dumel, name = nam, idnum = id)
+ end
+ 
+                              *** PROJECT_OPER ***                    
+
+ Function Project_oper, r, complementary = cmp
+ 
+ ;+
+ ; NAME:
+ ;	PROJECT_OPER
+ ; PURPOSE:
+ ;	Generates a projection operator into the subspace parallel (or
+ ;	perpendicular) to R.
+ ; CATEGORY:
+ ;	Geometry, General
+ ; CALLING SEQUENCE:
+ ;	Result = PROJECT_OPER ( R [,/COMPLEMENTARY )
+ ; INPUTS:
+ ;    R
+ ;	Vector, numeric, otherwise arbitrary.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    COMPLEMENTARY
+ ;	If set, the projection operator is into the subspace complementary to
+ ;	R.  Default is the subspace spanned by R.
+ ; OUTPUTS:
+ ;	Returns the projection matrix.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Straightforward.  Uses TYPE from MIDL and UNIVEC, IDENT_OPER, from
+ ;	XOPER_LIB.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     on_error, 1
+     siz = size(r)
+     if siz(0) eq 1 then tr = Univec(r) $
+     else if siz(1) eq 1 then tr = Univec(transpose(r)) $
+     else message, 'Not a vector!'
+ 
+     if not keyword_set(cmp) then return, tr#transpose(tr) $
+     else return, Ident_oper(n_elements(tr), type = Type(r)) - tr#transpose(tr)
+ end
+ 
+                              *** REFLECT_ELEM ***                    
+
+ Function Reflect_elem, elem, refelem, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	REFLECT_ELEM.
+ ; PURPOSE:
+ ;	Reflects the geometrical element ELEM in the plane REFELEM.  Both ELEM
+ ;	and REFELEM are GELEM structures (see routine MAKE_ELEM).
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = REFLECT_ELEM ( ELEM, REFELEM [, keywords] )
+ ; INPUTS:
+ ;    ELEM
+ ;	A GELEM structure
+ ;    REFELEM
+ ;	A GELEM structure representing a plane.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the result.
+ ;	Default is the name-type of ELEM.
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the result.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing the result of applying the
+ ;	reflection to ELEM.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	REFELEM must be a plane (i.e. refelem.dim = 2).
+ ; PROCEDURE:
+ ;	Calls REFLECT_OPER and MAKE_ELEM (in XOPER_LIB).  Also calls TYPE from
+ ;	MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+     if Type(elem) ne 8 or Type(refelem) ne 8 then message, 'Improper elements!'
+     if refelem.dim ne 2 then message, 'Reference must be a plane!'
+ 
+     dumel = elem
+     oper = Reflect_oper(refelem.dir)
+     dumel.loc = oper#(dumel.loc - refelem.loc) + refelem.loc
+     dumel.dir = oper#dumel.dir
+ 
+     return, Make_elem(dumel, name = nam, idnum = id)
+ end
+ 
+                              *** REFLECT_OPER ***                    
+
+ Function Reflect_oper, r
+ 
+ ;+
+ ; NAME:
+ ;	REFLECT_OPER
+ ; PURPOSE:
+ ;	Generates the operator corresponding to reflection in plane
+ ;	perpendicular to R.
+ ; CATEGORY:
+ ;	Geometry, General.
+ ; CALLING SEQUENCE:
+ ;	Result = REFLECT_OPER (R)
+ ; INPUTS:
+ ;    R
+ ;	Vector, numeric, otherwise arbitrary.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;	None.
+ ; OUTPUTS:
+ ;	Matrix representing the reflection operator.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Straightforward.  Uses IDENT_OPER AND PROJECT_OPER from XOPER_LIB.
+ ;	Also uses TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     return, Ident_oper(n_elements(r), type = Type(r)) - 2*Project_oper(r)
+ end
+ 
+                              *** ROTATE_ELEM ***                     
+
+ Function Rotate_elem, elem, refelem, tet, degrees = deg, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	ROTATE_ELEM.
+ ; PURPOSE:
+ ;	ROTATES the geometrical element ELEM around the line REFELEM.  Both
+ ;	ELEM and REFELEM are GELEM structures (see routine MAKE_ELEM).
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = ROTATE_ELEM (ELEM, REFELEM, TET [, keywords])
+ ; INPUTS:
+ ;    ELEM
+ ;	A GELEM structure
+ ;    REFELEM
+ ;	A GELEM structure representing a line.
+ ;    TET
+ ;	Rotation angle.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    DEGREES
+ ;	If set, the angle is taken in degrees.  Default is radians.
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the result.
+ ;	Default is the name-type of ELEM.
+ ;    IDNUM
+ ;	Accepts a number that is used as the IDN field of the result.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing the result of applying the
+ ;	rotation to ELEM.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	REFELEM must be a line (i.e. refelem.dim = 1)
+ ;	line.
+ ; PROCEDURE:
+ ;	Calls ROTATE_OPER and MAKE_ELEM (in XOPER_LIB).  Also calls TYPE from
+ ;	MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+     if Type(elem) ne 8 or Type(refelem) ne 8 then message, 'Improper elements!'
+     if refelem.dim ne 1 then message, 'Reference must be a line!'
+ 
+     dumel = elem
+     oper = Rotate_oper(refelem.dir,tet,degrees = deg)
+     dumel.loc = oper#(dumel.loc - refelem.loc) + refelem.loc
+     dumel.dir = oper#dumel.dir
+ 
+     return, Make_elem(dumel, name = nam, idnum = id)
+ end
+ 
+                              *** ROTATE_OPER ***                     
+
+ Function Rotate_oper, ax, tet, degrees = deg
+ 
+ ;+
+ ; NAME:
+ ;	ROTATE_OPER
+ ; PURPOSE:
+ ;	Generates a 3 dimensional rotation operator.
+ ; CATEGORY:
+ ;	Geometry, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = ROTATE_OPER ( AX, TET [,/DEGREES] )
+ ; INPUTS:
+ ;    AX
+ ;	3 dimensional vector in the direction of the rotation axis.
+ ;    TET
+ ;	Scalar, rotation angle.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    DEGREES
+ ;	If set, TET is assumed to be in degrees.  Default is radians.
+ ; OUTPUTS:
+ ;	Returns the 3-D operator representing a rotation by TET around AX.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Uses the mathematical definition of the rotation operator.  Also uses
+ ;	TYPE from MIDL and UNIVEC, IDENT_OPER and PROJECT_OPER from XOPER_LIB.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     on_error, 1
+     if n_elements(ax) ne 3 then message, 'Not a 3-D vector!'
+     if keyword_set(deg) then rtet = !dtor*tet else rtet = Cast(tet,4)
+     rax = Univec(ax)
+ 
+     return, cos(rtet)*Ident_oper(3,type = Type(rax)) + $
+     (1 - cos(rtet))*Project_oper(rax) + $
+     sin(rtet)*[[0,rax(2),-rax(1)],[-rax(2),0,rax(0)],[rax(1),-rax(0),0]]
+ end
+ 
+                               *** SHOW_ELEM ***                       
+
+ Pro Show_elem, elem, nospace = nosp
+ 
+ ;+
+ ; NAME:
+ ;	SHOW_ELEM.
+ ; PURPOSE:
+ ;	Displays the fields of ELEM, where ELEM is a geometrical element
+ ;	represented by a structure of type GELEM (see routine MAKE_ELEM).
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	SHOW_ELEM, ELEM [,/NOSPACE]
+ ; INPUTS:
+ ;    ELEM
+ ;	A GELEM structure.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NOSPACE
+ ;	Switch, if set supresses the printing of a blank line at the beginning.
+ ; OUTPUTS:
+ ;	None.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Straightforward.  Calls TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added ID number.
+ ;-
+ 
+     on_error, 1
+     if Type(elem) ne 8 then message, 'Improper element!'
+ 
+     eltype = ['undefined', 'point', 'line', 'plane']
+     if not keyword_set(nosp) then print
+     print, format = '("Name:",t16,a,t48,"| ID#:",i)', elem.nam, elem.idn
+     print, format = '("Type:",t16,a)', eltype(elem.dim + 1)
+     print, 'Location:	', elem.loc
+     print, 'Direction:	', elem.dir
+ 
+     return
+ end
+ 
+                             *** TRANSLATE_ELEM ***                  
+
+ Function Translate_elem, elem, disvec, mult, name = nam, idnum = id
+ 
+ ;+
+ ; NAME:
+ ;	TRANSLATE_ELEM.
+ ; PURPOSE:
+ ;	TRANSLATES a geometrical element ELEM in the direction of DISVEC.
+ ;	ELEM (and possibly DISVEC) is a GELEM structure (see MAKE_ELEM).
+ ; CATEGORY:
+ ;	Geometry, specialized, 3 dimensional.
+ ; CALLING SEQUENCE:
+ ;	Result = TRANSLATE_ELEM ( ELEM, DISVEC, MULT, [, keywords])
+ ; INPUTS:
+ ;    ELEM
+ ;	A GELEM structure.
+ ;    DISVEC
+ ;	Either a 3 dimensional vector or a geometrical element (GELEM)
+ ;	representing a line or plane.  in the second case MULT must be provided
+ ;    MULT
+ ;	Scalar representing the translation distance.  Not needed if DISVEC is
+ ;	a vector, since in this case the distance is the length of DISVEC.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;    NAME
+ ;	Accepts a character string that is used as the NAM field of the result.
+ ;	Default is the name-type of ELEM.
+ ;    IDNUM
+ ;	Accepts a character string that is used as the IDN field of the result.
+ ;	Default value is 1.
+ ; OUTPUTS:
+ ;	Returns a GELEM structure representing the result of applying the
+ ;	translation to ELEM.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	DISVEC cannot be a point.
+ ; PROCEDURE:
+ ;	Calls MAKE_ELEM (in XOPER_LIB).  Also calls TYPE from MIDL.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;	Modified 25-JULY-1992 by Mati Meron.  Added keyword IDNUM.
+ ;-
+ 
+     on_error, 1
+     if Type(elem) eq 8 then begin
+ 	dumel = elem
+ 	if Type(disvec) eq 8 then begin
+ 	    if disvec.dim gt 0 then dumel.loc = dumel.loc + mult*disvec.dir $
+ 	    else message, 'No direction information, can''t translate!'
+ 	endif else dumel.loc = dumel.loc + disvec
+     endif else message, 'Not a proper geometric element!'
+ 
+     return, Make_elem(dumel, name = nam, idnum = id)
+ end
+ 
+                                 *** UNIVEC ***                          
+
+ Function Univec, r
+ 
+ ;+
+ ; NAME:
+ ;	UNIVEC
+ ; PURPOSE:
+ ;	Normalizes a vector.
+ ; CATEGORY:
+ ;	Geometry, general.
+ ; CALLING SEQUENCE:
+ ;	Result = UNIVEC (R)
+ ; INPUTS:
+ ;    R
+ ;	Vector, numeric, otherwise arbitrary.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;	None.
+ ; OUTPUTS:
+ ;	Returns a vector in the same direction as R, normalized to unity.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	A zero vector will cause error.
+ ; PROCEDURE:
+ ;	Straightforward.  Uses VNORM from XOPER_LIB.
+ ;	Works also with complex vectors.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     return, r/Vnorm(r)
+ end
+ 
+                                 *** VNORM ***                           
+
+ Function Vnorm, r
+ 
+ ;+
+ ; NAME:
+ ;	VNORM
+ ; PURPOSE:
+ ;	Finds the norm of a vector.
+ ; CATEGORY:
+ ;	Geometry, General.
+ ; CALLING SEQUENCE:
+ ;	Result = VNORM (R)
+ ; INPUTS:
+ ;    R
+ ;	Vector, numeric, otherwise arbitrary.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;	None.
+ ; OUTPUTS:
+ ;	Returns the norm of the vector R.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	None.
+ ; PROCEDURE:
+ ;	Straightforward.  Works also with complex vectors.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     return, sqrt(total(abs(r)^2))
+ end
+ 
+                                 *** VSCALP ***                          
+
+ Function Vscalp, rf, rs
+ 
+ ;+
+ ; NAME:
+ ;	VSCALP
+ ; PURPOSE:
+ ;	Finds the scalar product of two vectors.
+ ; CATEGORY:
+ ;	Geometry, General.
+ ; CALLING SEQUENCE:
+ ;	Result = VSCALP ( RF, RS)
+ ; INPUTS:
+ ;    RF, RS
+ ;	Vectors, numeric, otherwise arbitrary.
+ ; OPTIONAL INPUT PARAMETERS:
+ ;	None.
+ ; KEYWORD PARAMETERS:
+ ;	None.
+ ; OUTPUTS:
+ ;	Returns the value of the scalar product.
+ ; OPTIONAL OUTPUT PARAMETERS:
+ ;	None.
+ ; COMMON BLOCKS:
+ ;	None.
+ ; SIDE EFFECTS:
+ ;	None.
+ ; RESTRICTIONS:
+ ;	Vectors must have same length.
+ ; PROCEDURE:
+ ;	Straightforward.  Uses TYPE from MIDL.
+ ;	Works also with complex vectors.
+ ; MODIFICATION HISTORY:
+ ;	Created 30-JUNE-1992 by Mati Meron.
+ ;-
+ 
+     on_error, 1
+     if n_elements(rf) ne n_elements(rs) then message, 'Unequal lengths!'
+ 
+     if Type(rf) ne 6 or Type(rs) ne 6 then return, total(rf*rs) $
+     else return, total(conj(rf)*rs)
+ end
+ 

@@ -1,0 +1,33 @@
+Data file for the evaluation of moderate-strong focusing at 15IDC
+
+begin_Source
+
+	energy  30
+	x_source 271 11.4
+	y_source 8.6 2.9
+	sigma  1
+	und_len = 2.4
+	name 15IDC
+	sorname standard
+
+End_source
+
+Begin_beam
+
+	FE_apex		sslx	25		2000	0	1
+	FE_apey		ssly	25		1000	0	1
+    mirf_ape	ssly	32		1200	0	1
+    mirf_slp	dify	32		1.0		1	1
+    mirf		focy	32		13.7	0	1
+    mirs_ape	ssly	33		1200	0	1
+    mirv_slp	dify	33		1.6		1	1
+    mirs		focy	33		999		0	0
+    JJB			ssly	48		2000	0	0
+    mir2_ape	ssly	54		200		0	0
+    mir2_slp	dify	54		1		1	0
+    mir2		focy	54		2		0	0
+    sam_slx		sslx	55.999	10		0	0
+    sam_sly		ssly	55.999	10		0	0
+    sample		nul		56		0		0	1
+
+end_beam

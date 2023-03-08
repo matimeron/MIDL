@@ -1,0 +1,20 @@
+Begin_source
+	wavelength	    0.4132808
+	x_source	     960.6700     40.41195
+	y_source	     30.48621     10.28023
+	sigma		       0
+	und_len	      2.40000
+	name		15IDC
+	sorname		standard
+End_source
+
+Begin_beam
+    mir1_ape    ssly      31.000     2000.000   0   1
+    mir1_slp    dify      31.000     5.829218   0   1
+    mir1        focy      31.000     11.61400   0   1
+    JJB         ssly      48.000     8.000000   0   1
+    mir2_ape    ssly      54.000     200.0000   0   1
+    mir2_slp    dify      54.000     11.65844   0   1
+    mir2        focy      54.000     1.501000   0   1
+    sample      nul       56.000    0.0000000   0   1
+End_beam

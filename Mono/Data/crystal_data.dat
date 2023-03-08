@@ -1,0 +1,81 @@
+CRYSTAL DATA
+
+Comments:
+
+Each crystal's data starts with a line including the word "BEGIN", followed
+by (in order)
+	Chemical symbol
+	Z - atomic number
+	A - Atomic weight
+	density (in gr/cm^3)
+	crystal structure (currently only cubic)
+	base cell dimensions
+
+Following the opening line, the atomic scattering factors are listed as pairs
+of numbers.  The first entry of the pair is the value of sin(theta)/lambda, in
+inverse Angstrem and the second entry is the value of the atomic scattering
+factor.  The list (for each element) ends with the word "END".  Blank lines are
+allowed.
+
+begin		Diamond	C	6	12.011	3.5156	fcc	3.56703  0  0
+
+	0.0		 6.00
+	0.1		 5.13
+	0.2		 3.58
+	0.3		 2.50
+	0.4		 1.95
+	0.5		 1.69
+	0.6		 1.54
+	0.7		 1.43
+	0.8		 1.32
+	0.9		 1.22
+	1.0		 1.11
+	1.1		 1.01
+	1.2		 0.91
+	1.3		 0.82
+	1.4		 0.74
+	1.5		 0.66
+
+end
+
+begin		Silicon	Si	14	28.0855	2.3294	fcc	5.43072  0  0
+
+	0.0		14.00
+	0.1		12.16
+	0.2		 9.67
+	0.3		 8.22
+	0.4		 7.20
+	0.5		 6.24
+	0.6		 5.31
+	0.7		 4.47
+	0.8		 3.75
+	0.9		 3.16
+	1.0		 2.69
+	1.1		 2.35
+	1.2		 2.07
+	1.3		 1.87
+	1.4		 1.71
+	1.5		 1.60
+
+end
+
+begin		Germanium	Ge	32	72.61		5.3266	fcc	5.65754  0  0
+
+	0.0		32.00
+	0.1		29.52
+	0.2		25.53
+	0.3		22.11
+	0.4		19.02
+	0.5		16.19
+	0.6		13.72
+	0.7		11.68
+	0.8		10.08
+	0.9		 8.87
+	1.0		 7.96
+	1.1		 7.29
+	1.2		 6.77
+	1.3		 6.37
+	1.4		 6.02
+	1.5		 5.72
+
+end

@@ -1,0 +1,57 @@
+Function ABC_prop, abc, distance = dis, clean = cle
+
+;+
+; NAME:
+;		ABC_PROP
+; VERSION:
+;		8.714
+; PURPOSE:
+;		Propagates an ABC-type distribution.
+; CATEGORY:
+;		Optics ABC-formalism calculations.
+; CALLING SEQUENCE:
+;		Result = ABC_PROP ( ABC, {, keywords})
+; INPUTS:
+;	ABC
+;		An {ABC} type structure.
+; OPTIONAL INPUT PARAMETERS:
+;		None.
+; KEYWORD PARAMETERS:
+; 	DISTANCE
+; 		Scalar, propagation distance (normally in meters).
+; 	/CLEAN
+; 		Switch.  Specifying "cleaning up" the result.  See ABC_CLEAN for details
+; OUTPUTS:
+;		Returns an ABC structure, with values transformed thru propagation by
+;		DISTANCE.
+; OPTIONAL OUTPUT PARAMETERS:
+;		None.
+; COMMON BLOCKS:
+;		None.
+; SIDE EFFECTS:
+;		None.
+; RESTRICTIONS:
+;		None.
+; PROCEDURE:
+;		Following the propagation procedure described in the "Beam-Crystal
+;		Interaction" write-up.  Calls ABC_CLEAN.  Calls DEFAULT, DIAGOARR and
+;		STREQ, from MIDL.
+; MODIFICATION HISTORY:
+;		Created 15-JUNE-2017 by Mati Meron.
+;		Documented 5-JUL-2019 by Mati Meron.
+;-
+
+	on_error, 1
+
+	if Streq(tag_names(abc,/str),'abc') then begin
+		res = abc
+		tmat = Diagoarr(replicate(1d,4))
+		tmat[[2,3],[0,1]] = -Default(dis,0d,/dtyp)
+		res.amat = transpose(tmat)##res.amat##tmat
+		res.bvc0 = transpose(tmat)##res.bvc0
+		res.bvc1 = transpose(tmat)##res.bvc1
+		if keyword_set(cle) then res = ABC_clean(res)
+	endif else message, 'Primary input must be an ABC structure!'
+
+	return, res
+end

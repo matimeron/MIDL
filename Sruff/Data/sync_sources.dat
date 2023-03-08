@@ -1,0 +1,204 @@
+The parameters listed for each source are:
+
+		RENE  -	Ring energy in GeV.
+		RGAM  -	The relativistic GAMMA of the machine.
+		CURR  -	The current in the machine in Amperes.
+		BMMF  -	Bending magnet magnetic field, in Tesla.
+		DLEN  -	The standard insertion device length, in meters.
+		SLEN  -	The standard superconducting insertion, device in meters
+		MGAP  -	Minimal insertion device gap, in mm.
+		SGAP  -	Superconducting insertion device gap, in mm.
+		RSIG  -	Source (ID) spatial dimensions in mm.  2-element vector
+				in a [sigma_x,sigma_y] format.
+		ASIG  -	Source (ID) angular dimensions in mrad.  2-element vector
+				in a [sigma_x',sigma_y'] format.
+		APER  -	The standard front end aperture size in mm.  2-element
+				vector in a [xsize,ysize] format.
+		DIST  -	The standard distance from source to the aperture, in meters.
+
+begin
+	sync	APS
+	desc	APS, current lattice
+	rene	7.0
+	rgam	13698.659
+	curr	0.1
+	bmmf	0.599
+	dlen	2.4
+	slen	1.8
+	mgap	10.5
+	sgap	9.0
+	rsig	0.2780	0.0102
+	asig	0.0117	0.0030
+	aper	3.0		2.0
+	dist	25.0
+end
+
+begin
+	sync	APSU_0
+	desc	APS MBA lattice, coupling = 1, preliminary
+	rene	6.0
+	rgam	11741.708
+	curr	0.2
+	bmmf	0.513
+	dlen	2.4
+	slen	1.8
+	mgap	8.5
+	sgap	8.5
+	rsig	0.0100	0.0100
+	asig	0.0040	0.0040
+	aper	2.0		2.0
+	dist	25.0
+end
+
+begin
+	sync	APSU_Timing
+	desc	APS MBA lattice, coupling = 1
+	rene	6.0
+	rgam	11741.708
+	curr	0.2
+	bmmf	0.513
+	dlen	2.1
+	slen	1.5
+	mgap	8.5
+	sgap	8.5
+	rsig	0.0129	0.0087
+	asig	0.0025	0.0036
+	aper	2.0		2.0
+	dist	25.0
+end
+
+begin
+	sync	APSU_Bright
+	desc	APS MBA lattice, coupling = 0.1
+	rene	6.0
+	rgam	11741.708
+	curr	0.2
+	bmmf	0.513
+	dlen	2.1
+	slen	1.5
+	mgap	8.5
+	sgap	8.5
+	rsig	0.0147	0.0032
+	asig	0.0028	0.0013
+	aper	2.0		2.0
+	dist	25.0
+end
+
+begin
+	sync	NSLS2_LB
+	desc	NSLS2, low beta section
+	rene	3.0
+	rgam	5870.854
+	curr	0.5
+	bmmf	0.4
+	dlen	3.0
+	slen	1.8
+	mgap	5.0
+	sgap	8.5
+	rsig	0.0333	0.0029
+	asig	0.0165	0.0027
+	aper	3.0		2.0
+	dist	25.0
+end
+
+begin
+	sync	NSLS2_HB
+	desc	NSLS2, high beta section
+	rene	3.0
+	rgam	5870.854
+	curr	0.5
+	bmmf	0.4
+	dlen	6.0
+	slen	1.8
+	mgap	7.0
+	sgap	8.5
+	rsig	0.1070	0.0052
+	asig	0.0051	0.0015
+	aper	3.0		2.0
+	dist	25.0
+end
+
+begin
+	sync	TPS
+	desc	TPS, high beta section (??)
+	rene	3.0
+	rgam	5870.854
+	curr	0.5
+	bmmf	0.4
+	dlen	3.1
+	slen	1.8
+	mgap	5.0
+	sgap	8.5
+	rsig	0.1650	0.0098
+	asig	0.0096	0.0016
+	aper	3.0		2.0
+	dist	25.0
+end
+
+begin
+	sync	ESRF
+	desc	ESRF, high beta section
+	rene	6.03
+	rgam	11800.417
+	curr	0.2
+	bmmf	0.4
+	dlen	1.6
+	slen	1.2
+	mgap	11.0
+	sgap	8.5
+	rsig	0.4020	0.0079
+	asig	0.0107	0.0032
+	aper	1.0		0.5
+	dist	30.0
+end
+
+begin
+	sync	SPring-8
+	desc	SPring-8, long ID section
+	rene	8.0
+	rgam	15655.610
+	curr	0.1
+	bmmf	0.679
+	dlen	4.5
+	slen	2.4
+	mgap	8.0
+	sgap	8.0
+	rsig	0.2940	0.010
+	asig	0.0130	0.0007
+	aper	1.0		0.5
+	dist	40.0
+end
+
+begin
+	sync	PETRA III
+	desc	PETRA III undulator beamline
+	rene	6.0
+	rgam	11741.708
+	curr	0.1
+	bmmf	0.873
+	dlen	2.0
+	slen	1.5
+	mgap	10.0
+	sgap	10.0
+	rsig	0.1420	0.0052
+	asig	0.0087	0.0055
+	aper	2.0		1.0
+	dist	30.0
+end
+
+begin
+	sync	DIAMOND
+	desc	DIAMOND undulator beamline
+	rene	3.0
+	rgam	5870.854
+	curr	0.3
+	bmmf	0.4
+	dlen	2.0
+	slen	1.5
+	mgap	7.0
+	sgap	7.0
+	rsig	0.1202	0.0034
+	asig	0.0296	0.0024
+	aper	3.0		2.0
+	dist	25.0
+end
